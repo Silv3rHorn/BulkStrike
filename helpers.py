@@ -1,4 +1,5 @@
 import cs_methods
+import csv
 import os
 import re
 import sys
@@ -13,7 +14,7 @@ mac_os = ['cat', 'cd', 'clear', 'cp', 'get', 'help', 'history', 'ipconfig', 'kil
           'netstat', 'ps', 'rm', 'zip']
 
 
-def execute_command(full_cmd: str) -> int:
+def execute_command(full_cmd: str, outfile) -> int:
     reg_pattern = re.compile("reg.+")
     base_cmd = full_cmd.split(' ', 2)
     try:
@@ -23,13 +24,13 @@ def execute_command(full_cmd: str) -> int:
             base_cmd = base_cmd[0]
         if base_cmd in read_only:
             response = cs_methods.run_batch_cmd(base_cmd, full_cmd)
-            print_cmd_response(response['combined']['resources'])
+            print_cmd_response(response['combined']['resources'], outfile)
         elif base_cmd in active_responder:
             response = cs_methods.run_batch_ar_cmd(base_cmd, full_cmd)
-            print_cmd_response(response['combined']['resources'])
+            print_cmd_response(response['combined']['resources'], outfile)
         elif base_cmd in rtr_admin:
             response = cs_methods.run_batch_admin_cmd(base_cmd, full_cmd)
-            print_cmd_response(response['combined']['resources'])
+            print_cmd_response(response['combined']['resources'], outfile)
         elif base_cmd.lower() == 'bulk':
             path = full_cmd.replace('bulk ', '')
             path = os.path.abspath(path)
@@ -46,8 +47,8 @@ def execute_command(full_cmd: str) -> int:
     return 0
 
 
-def print_cmd_response(response: dict):
-    # print(response)  # debug
+def print_cmd_response(response: dict, outfile):
+    print(response)  # debug
     for host in response:
         print("Host ID : {}".format(response[host]['aid']))
         print("Complete: {}".format(response[host]['complete']))
@@ -55,6 +56,14 @@ def print_cmd_response(response: dict):
         print("Stderr  : {}".format(response[host]['stderr']))
         print("Errors  : {}".format(response[host]['errors']))
         print()
+        if outfile is not None:
+            stdout = str(response[host]['stdout']).replace('\r', ' ').replace('\n', ' ')
+            stderr = str(response[host]['stderr']).replace('\r', ' ').replace('\n', ' ')
+            errors = str(response[host]['errors']).replace('\r', ' ').replace('\n', ' ')
+            outfile.write(str(response[host]['session_id']) + '\t' + str(response[host]['task_id']) + '\t' +
+                          str(response[host]['aid']) + '\t' + str(response[host]['base_command']) + '\t' +
+                          str(response[host]['complete']) + '\t' + str(response[host]['offline_queued']) + '\t' +
+                          str(response[host]['query_time']) + '\t' + stdout + '\t' + stderr + '\t' + errors + '\n')
 
 
 def to_readable(num, suffix='B'):
@@ -77,6 +86,20 @@ def file_to_list(path: str) -> list:
     return hosts
 
 
+def dict_to_tsv(input_type: str, input_list: list):
+    timestamp = datetime.now().strftime("%Y-%m-%d@%H%M%S")
+    filename = input_type + timestamp + ".tsv"
+
+    if isinstance(input_list, dict):
+        input_list = list(input_list.values())
+    keys = input_list[0].keys()
+
+    with open(filename, 'w', newline='') as output_file:
+        dict_writer = csv.DictWriter(output_file, keys, delimiter='\t')
+        dict_writer.writeheader()
+        dict_writer.writerows(input_list)
+
+
 def print_host_info(hosts_info: list):
     if len(hosts_info) > 0:
         print("{:<20} {:<36} {:<32} {:<16} {:<16} {:<24} {:<24}".format('Hostname', 'Host ID', 'Last Seen',
@@ -96,6 +119,16 @@ def print_host_info(hosts_info: list):
                                                                         host_info['system_manufacturer'],
                                                                         host_info['system_product_name'],
                                                                         host_info['agent_version']))
+
+
+def print_rtr_comms_status(rtr_status: dict):
+    rtr_status = list(rtr_status.values())
+
+    if len(rtr_status) > 0:
+        print("{:<36} {:<12} {:<18}".format('Host ID', 'Complete', 'Offline Queued'))
+
+    for host in rtr_status:
+        print("{:<36} {:<12} {:<18}".format(host['aid'], str(host['complete']), str(host['offline_queued'])))
 
 
 def is_expiring(life_time: int, req_time: datetime) -> bool:

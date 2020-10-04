@@ -7,6 +7,7 @@ import os
 import sys
 import cs_methods
 import helpers
+from datetime import datetime
 
 # GLOBALS/PARAMS
 HOME_DIR = os.path.expanduser('~')
@@ -65,7 +66,7 @@ def req_token():
     cs_methods.get_token(new_token=True)
 
 
-def get_info(host: str, file: str):
+def get_info(host: str, file: str, log: bool):
     if host is not None:
         req_hosts = host.split(',')
         response = cs_methods.get_host_info(req_hosts)
@@ -86,6 +87,8 @@ def get_info(host: str, file: str):
             hosts_info.append(host_info)
 
     helpers.print_host_info(hosts_info)
+    if log:
+        helpers.dict_to_tsv('hosts_info_', hosts_info)
 
 
 def list_files(action: str):
@@ -162,7 +165,7 @@ def upload_script(path: str, permission: str, description: str):
         print("Error! File path is invalid.")
 
 
-def start_rtr(host: str, file: str):
+def start_rtr(host: str, file: str, log: bool):
     host_ids = []
     if host is not None:
         host_ids = host.split(',')
@@ -173,20 +176,31 @@ def start_rtr(host: str, file: str):
 
     failed_hosts = []
     for host in response['resources']:
+        if log:
+            helpers.dict_to_tsv('rtr_hosts_', response['resources'])
         if response['resources'][host]['complete'] is False:
             failed_hosts.append(response['resources'][host]['aid'])
-    if len(failed_hosts) > 0:
-        print("Error! Failed to connect to {} host(s):".format(len(failed_hosts)))
-        for host in failed_hosts:
-            print(host)
+    helpers.print_rtr_comms_status(response['resources'])
 
     if len(response['errors']) == 0:
         print("RTR session started...")
         print("type 'bulk <file path>' to execute multiple commands")
+
+        outfile = None
         choice = 1
-        while choice != 2:
-            full_cmd = input("(type exit to end) > ")
-            choice = helpers.execute_command(full_cmd)
+        if log:
+            timestamp = datetime.now().strftime("%Y-%m-%d@%H%M%S")
+            filename = "rtr_response_" + timestamp + ".tsv"
+            with open(filename, 'w') as outfile:
+                outfile.write("Session ID\tTask ID\tHost ID\tBase Command\tComplete\tOffline Queued\tQuery Duration\t"
+                              "Stdout\tStderr\tErrors\n")
+                while choice != 2:
+                    full_cmd = input("(type exit to end) > ")
+                    choice = helpers.execute_command(full_cmd, outfile)
+        else:
+            while choice != 2:
+                full_cmd = input("(type exit to end) > ")
+                choice = helpers.execute_command(full_cmd, outfile)
     else:
         print("RTR session was not started.")
         sys.exit(1)
@@ -202,7 +216,7 @@ def main():
         '                Req Arguments    Description\n'
         'configure       NIL              provide CrowdStrike Client ID and/or Secret.\n'
         'req_token       NIL              request for CrowdStrike authentication token.\n'
-        'get_info        -s or -f         get system info of provided host id or hostname.\n'
+        'get_info        -s or -f [--log] get system info of provided host id or hostname.\n'
         'list_files      NIL              list basic info of all RTR response files on CrowdStrike Cloud.\n'
         'get_file        -i               get detailed info of a RTR response file on CrowdStrike Cloud.\n'
         'upload_file     -f and -d        upload a RTR response file to CrowdStrike Cloud.\n'
@@ -211,7 +225,7 @@ def main():
         'get_script      -i               get detailed info of a RTR response file on CrowdStrike Cloud.\n'
         'upload_script   -f and -p [-d]   upload a RTR response file to CrowdStrike Cloud.\n'
         'delete_script   -i               delete a RTR response file from CrowdStrike Cloud.\n'
-        'start_rtr       -s or -f         initialise rtr session on specified hosts.\n'))
+        'start_rtr       -s or -f [--log] initialise rtr session on specified hosts.\n'))
     argument_parser.add_argument('-s', '--host', default=None, help=(
         'host id or hostname'))
     argument_parser.add_argument('-f', '--file', default=None, help=(
@@ -222,6 +236,8 @@ def main():
         'description of RTR response file or script'))
     argument_parser.add_argument('-p', '--permission', default=None, help=(
         'permission of RTR response script (private, group, public'))
+    argument_parser.add_argument('--log', action='store_true', help="write raw server response to tsv file in current "
+                                                                    "working directory")
 
     options = argument_parser.parse_args()
     if options.file is not None:
@@ -237,9 +253,9 @@ def main():
 
     init(read_creds=True, read_token=True)
     if options.action == 'get_info':
-        get_info(options.host, options.file)
+        get_info(options.host, options.file, options.log)
     elif options.action == 'start_rtr':
-        start_rtr(options.host, options.file)
+        start_rtr(options.host, options.file, options.log)
     elif options.action in ('list_files', 'list_scripts'):
         list_files(options.action)
     elif options.action in ('get_file', 'get_script'):
