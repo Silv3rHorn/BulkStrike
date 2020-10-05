@@ -5,13 +5,11 @@ import re
 import sys
 from datetime import datetime, timezone
 
-read_only = ['cat', 'cd', 'clear', 'env', 'eventlog', 'filehash', 'getsid', 'history', 'ipconfig', 'ls',
-             'mount', 'netstat', 'ps', 'reg query']
+read_only = ['cat', 'cd', 'clear', 'csrutil', 'env', 'eventlog', 'filehash', 'getsid', 'history', 'ifconfig',
+             'ipconfig', 'ls', 'mount', 'netstat', 'ps', 'reg query', 'users']
 active_responder = ['cp', 'encrypt', 'get', 'kill', 'map', 'memdump', 'mkdir', 'mv', 'reg set' 'reg delete', 'reg load'
-                    'reg unload', 'restart', 'rm', 'runscript', 'shutdown', 'unmap', 'xmemdump', 'zip']
+                    'reg unload', 'restart', 'rm', 'runscript', 'shutdown', 'umount', 'unmap', 'xmemdump', 'zip']
 rtr_admin = ['put', 'run']
-mac_os = ['cat', 'cd', 'clear', 'cp', 'get', 'help', 'history', 'ipconfig', 'kill', 'ls', 'mkdir', 'mount', 'mv',
-          'netstat', 'ps', 'rm', 'zip']
 
 
 def execute_command(full_cmd: str, outfile) -> int:
