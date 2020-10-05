@@ -291,17 +291,19 @@ def list_scripts() -> dict:
     return response
 
 
-def init_rtr_session(host_ids: list) -> dict:
+def init_rtr_session(host_ids: list, queue: bool) -> dict:
     """
         Start a session with one or more hosts
-        :param host_ids: List of host agent ID’s to initialize a RTR session on.
+        :param host_ids: List of host agent ID’s to initialize a RTR session on
+        :param queue: Boolean to queue commands for offline hosts
         :return: The session batch ID to execute the command on
     """
     global BATCH_ID, BATCH_REQ_TIME
 
     endpoint_url = '/real-time-response/combined/batch-init-session/v1'
     body = json.dumps({
-        'host_ids': host_ids
+        'host_ids': host_ids,
+        'queue_offline': queue
     })
     response = http_request('POST', endpoint_url, data=body)
     BATCH_REQ_TIME = datetime.now()

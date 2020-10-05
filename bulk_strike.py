@@ -165,14 +165,14 @@ def upload_script(path: str, permission: str, description: str):
         print("Error! File path is invalid.")
 
 
-def start_rtr(host: str, file: str, log: bool):
+def start_rtr(host: str, file: str, log: bool, queue: bool):
     host_ids = []
     if host is not None:
         host_ids = host.split(',')
     elif file is not None:
         host_ids = helpers.file_to_list(file)
 
-    response = cs_methods.init_rtr_session(host_ids)
+    response = cs_methods.init_rtr_session(host_ids, queue)
 
     failed_hosts = []
     for host in response['resources']:
@@ -197,6 +197,7 @@ def start_rtr(host: str, file: str, log: bool):
                 while choice != 2:
                     full_cmd = input("(type exit to end) > ")
                     choice = helpers.execute_command(full_cmd, outfile)
+                    outfile.flush()
         else:
             while choice != 2:
                 full_cmd = input("(type exit to end) > ")
@@ -213,19 +214,19 @@ def main():
     ), formatter_class=argparse.RawTextHelpFormatter)
 
     argument_parser.add_argument('action', metavar='action', default=None, help=(
-        '                Req Arguments    Description\n'
-        'configure       NIL              provide CrowdStrike Client ID and/or Secret.\n'
-        'req_token       NIL              request for CrowdStrike authentication token.\n'
-        'get_info        -s or -f [--log] get system info of provided host id or hostname.\n'
-        'list_files      NIL              list basic info of all RTR response files on CrowdStrike Cloud.\n'
-        'get_file        -i               get detailed info of a RTR response file on CrowdStrike Cloud.\n'
-        'upload_file     -f and -d        upload a RTR response file to CrowdStrike Cloud.\n'
-        'delete_file     -i               delete a RTR response file from CrowdStrike Cloud.\n'
-        'list_scripts    NIL              list basic info of all RTR response files on CrowdStrike Cloud.\n'
-        'get_script      -i               get detailed info of a RTR response file on CrowdStrike Cloud.\n'
-        'upload_script   -f and -p [-d]   upload a RTR response file to CrowdStrike Cloud.\n'
-        'delete_script   -i               delete a RTR response file from CrowdStrike Cloud.\n'
-        'start_rtr       -s or -f [--log] initialise rtr session on specified hosts.\n'))
+        '                Req Arguments              Description\n'
+        'configure       NIL                        provide CrowdStrike Client ID and/or Secret.\n'
+        'req_token       NIL                        request for CrowdStrike authentication token.\n'
+        'get_info        -s or -f [--log]           get system info of provided host id or hostname.\n'
+        'list_files      NIL                        list basic info of all RTR response files on CrowdStrike Cloud.\n'
+        'get_file        -i                         get detailed info of a RTR response file on CrowdStrike Cloud.\n'
+        'upload_file     -f and -d                  upload a RTR response file to CrowdStrike Cloud.\n'
+        'delete_file     -i                         delete a RTR response file from CrowdStrike Cloud.\n'
+        'list_scripts    NIL                        list basic info of all RTR response files on CrowdStrike Cloud.\n'
+        'get_script      -i                         get detailed info of a RTR response file on CrowdStrike Cloud.\n'
+        'upload_script   -f and -p [-d]             upload a RTR response file to CrowdStrike Cloud.\n'
+        'delete_script   -i                         delete a RTR response file from CrowdStrike Cloud.\n'
+        'start_rtr       -s or -f [--log] [--queue] initialise rtr session on specified hosts.\n'))
     argument_parser.add_argument('-s', '--host', default=None, help=(
         'host id or hostname'))
     argument_parser.add_argument('-f', '--file', default=None, help=(
@@ -238,6 +239,7 @@ def main():
         'permission of RTR response script (private, group, public'))
     argument_parser.add_argument('--log', action='store_true', help="write raw server response to tsv file in current "
                                                                     "working directory")
+    argument_parser.add_argument('--queue', action='store_true', help="queue commands to offline hosts")
 
     options = argument_parser.parse_args()
     if options.file is not None:
@@ -255,7 +257,7 @@ def main():
     if options.action == 'get_info':
         get_info(options.host, options.file, options.log)
     elif options.action == 'start_rtr':
-        start_rtr(options.host, options.file, options.log)
+        start_rtr(options.host, options.file, options.log, options.queue)
     elif options.action in ('list_files', 'list_scripts'):
         list_files(options.action)
     elif options.action in ('get_file', 'get_script'):

@@ -37,7 +37,7 @@ def execute_command(full_cmd: str, outfile) -> int:
             commands = file_to_list(path)
             for command in commands:
                 print(command)
-                execute_command(command)
+                execute_command(command, outfile)
         elif base_cmd.lower() == 'exit':
             return 2
         else:
@@ -48,22 +48,23 @@ def execute_command(full_cmd: str, outfile) -> int:
 
 
 def print_cmd_response(response: dict, outfile):
-    print(response)  # debug
-    for host in response:
-        print("Host ID : {}".format(response[host]['aid']))
-        print("Complete: {}".format(response[host]['complete']))
-        print("Stdout  : {}".format(response[host]['stdout']))
-        print("Stderr  : {}".format(response[host]['stderr']))
-        print("Errors  : {}".format(response[host]['errors']))
+    # print(response, response.keys())  # debug
+    for key, value in response.items():
+        print("Host ID : {}".format(value['aid']))
+        print("Complete: {}".format(value['complete']))
+        print("Queued  : {}".format(value['offline_queued']))
+        print("Stdout  : {}".format(value['stdout']))
+        print("Stderr  : {}".format(value['stderr']))
+        print("Errors  : {}".format(value['errors']))
         print()
         if outfile is not None:
-            stdout = str(response[host]['stdout']).replace('\r', ' ').replace('\n', ' ')
-            stderr = str(response[host]['stderr']).replace('\r', ' ').replace('\n', ' ')
-            errors = str(response[host]['errors']).replace('\r', ' ').replace('\n', ' ')
-            outfile.write(str(response[host]['session_id']) + '\t' + str(response[host]['task_id']) + '\t' +
-                          str(response[host]['aid']) + '\t' + str(response[host]['base_command']) + '\t' +
-                          str(response[host]['complete']) + '\t' + str(response[host]['offline_queued']) + '\t' +
-                          str(response[host]['query_time']) + '\t' + stdout + '\t' + stderr + '\t' + errors + '\n')
+            stdout = str(value['stdout']).replace('\r', ' ').replace('\n', ' ')
+            stderr = str(value['stderr']).replace('\r', ' ').replace('\n', ' ')
+            errors = str(value['errors']).replace('\r', ' ').replace('\n', ' ')
+            outfile.write(str(value['session_id']) + '\t' + str(value['task_id']) + '\t' +
+                          str(value['aid']) + '\t' + str(value['base_command']) + '\t' +
+                          str(value['complete']) + '\t' + str(value['offline_queued']) + '\t' +
+                          str(value['query_time']) + '\t' + stdout + '\t' + stderr + '\t' + errors + '\n')
 
 
 def to_readable(num, suffix='B'):
@@ -95,9 +96,12 @@ def dict_to_tsv(input_type: str, input_list: list):
     keys = input_list[0].keys()
 
     with open(filename, 'w', newline='') as output_file:
-        dict_writer = csv.DictWriter(output_file, keys, delimiter='\t')
-        dict_writer.writeheader()
-        dict_writer.writerows(input_list)
+        try:
+            dict_writer = csv.DictWriter(output_file, keys, delimiter='\t')
+            dict_writer.writeheader()
+            dict_writer.writerows(input_list)
+        except ValueError:
+            print("Value Error: Logging failed due to inconsistency in number of fields returned!")
 
 
 def print_host_info(hosts_info: list):
