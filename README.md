@@ -45,7 +45,7 @@ optional arguments:
                         description of RTR response file or script
   -p PERMISSION, --permission PERMISSION
                         permission of RTR response script (private, group, public)
-  --log                 write raw server response to tsv file in current working directory
+  --log                 write console output to tsv file in current working directory
   --queue               queue commands to offline hosts
 ```
 

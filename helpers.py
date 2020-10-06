@@ -12,6 +12,26 @@ active_responder = ['cp', 'encrypt', 'get', 'kill', 'map', 'memdump', 'mkdir', '
 rtr_admin = ['put', 'run']
 
 
+def to_readable(num, suffix='B'):
+    for unit in ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
+        if abs(num) < 1024.0:
+            return "%3.1f %s%s" % (num, unit, suffix)
+        num /= 1024.0
+    return "%.1f %s%s" % (num, 'Yi', suffix)
+
+
+def file_to_list(path: str) -> list:
+    if os.path.isfile(path):
+        with open(path) as infile:
+            hosts = infile.readlines()
+        hosts = [host.strip() for host in hosts]
+    else:
+        print("Error! File path does not exist.")
+        sys.exit(1)
+
+    return hosts
+
+
 def execute_command(full_cmd: str, outfile) -> int:
     reg_pattern = re.compile("reg.+")
     base_cmd = full_cmd.split(' ', 2)
@@ -45,64 +65,7 @@ def execute_command(full_cmd: str, outfile) -> int:
     return 0
 
 
-def print_cmd_response(response: dict, outfile):
-    # print(response, response.keys())  # debug
-    for key, value in response.items():
-        print("Host ID : {}".format(value['aid']))
-        print("Complete: {}".format(value['complete']))
-        print("Queued  : {}".format(value['offline_queued']))
-        print("Stdout  : {}".format(value['stdout']))
-        print("Stderr  : {}".format(value['stderr']))
-        print("Errors  : {}".format(value['errors']))
-        print()
-        if outfile is not None:
-            stdout = str(value['stdout']).replace('\r', ' ').replace('\n', ' ')
-            stderr = str(value['stderr']).replace('\r', ' ').replace('\n', ' ')
-            errors = str(value['errors']).replace('\r', ' ').replace('\n', ' ')
-            outfile.write(str(value['session_id']) + '\t' + str(value['task_id']) + '\t' +
-                          str(value['aid']) + '\t' + str(value['base_command']) + '\t' +
-                          str(value['complete']) + '\t' + str(value['offline_queued']) + '\t' +
-                          str(value['query_time']) + '\t' + stdout + '\t' + stderr + '\t' + errors + '\n')
-
-
-def to_readable(num, suffix='B'):
-    for unit in ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
-        if abs(num) < 1024.0:
-            return "%3.1f %s%s" % (num, unit, suffix)
-        num /= 1024.0
-    return "%.1f %s%s" % (num, 'Yi', suffix)
-
-
-def file_to_list(path: str) -> list:
-    if os.path.isfile(path):
-        with open(path) as infile:
-            hosts = infile.readlines()
-        hosts = [host.strip() for host in hosts]
-    else:
-        print("Error! File path does not exist.")
-        sys.exit(1)
-
-    return hosts
-
-
-def dict_to_tsv(input_type: str, input_list: list):
-    timestamp = datetime.now().strftime("%Y-%m-%d@%H%M%S")
-    filename = input_type + timestamp + ".tsv"
-
-    if isinstance(input_list, dict):
-        input_list = list(input_list.values())
-    keys = input_list[0].keys()
-
-    with open(filename, 'w', newline='') as output_file:
-        try:
-            dict_writer = csv.DictWriter(output_file, keys, delimiter='\t')
-            dict_writer.writeheader()
-            dict_writer.writerows(input_list)
-        except ValueError:
-            print("Value Error: Logging failed due to inconsistency in number of fields returned!")
-
-
-def print_host_info(hosts_info: list):
+def print_host_info(hosts_info: list, outfile):
     if len(hosts_info) > 0:
         print("{:<20} {:<36} {:<32} {:<16} {:<16} {:<24} {:<24}".format('Hostname', 'Host ID', 'Last Seen',
                                                                         'OS Version', 'Manufacturer', 'Product',
@@ -121,16 +84,41 @@ def print_host_info(hosts_info: list):
                                                                         host_info['system_manufacturer'],
                                                                         host_info['system_product_name'],
                                                                         host_info['agent_version']))
+        if outfile is not None:
+            outfile.write(str(host_info['hostname']) + '\t' + str(host_info['device_id']) + '\t' +
+                          last_seen_relative + '\t' + str(host_info['os_version']) + '\t' +
+                          str(host_info['system_manufacturer']) + '\t' + str(host_info['system_product_name']) + '\t' +
+                          str(host_info['agent_version']) + '\n')
 
 
-def print_rtr_comms_status(rtr_status: dict):
+def print_rtr_comms_status(rtr_status: dict, outfile):
     rtr_status = list(rtr_status.values())
-
     if len(rtr_status) > 0:
         print("{:<36} {:<12} {:<18}".format('Host ID', 'Complete', 'Offline Queued'))
-
     for host in rtr_status:
         print("{:<36} {:<12} {:<18}".format(host['aid'], str(host['complete']), str(host['offline_queued'])))
+        if outfile is not None:
+            outfile.write(str(host['aid']) + '\t' + str(host['complete']) + '\t' + str(host['offline_queued']) + '\n')
+
+
+def print_cmd_response(response: dict, outfile):
+    # print(response, response.keys())  # debug
+    for key, value in response.items():
+        print("Host ID : {}".format(value['aid']))
+        print("Complete: {}".format(value['complete']))
+        print("Queued  : {}".format(value['offline_queued']))
+        print("Stdout  : {}".format(value['stdout']))
+        print("Stderr  : {}".format(value['stderr']))
+        print("Errors  : {}".format(value['errors']))
+        print()
+        if outfile is not None:
+            stdout = str(value['stdout']).replace('\r', ' ').replace('\n', ' ')
+            stderr = str(value['stderr']).replace('\r', ' ').replace('\n', ' ')
+            errors = str(value['errors']).replace('\r', ' ').replace('\n', ' ')
+            outfile.write(str(value['session_id']) + '\t' + str(value['task_id']) + '\t' +
+                          str(value['aid']) + '\t' + str(value['base_command']) + '\t' +
+                          str(value['complete']) + '\t' + str(value['offline_queued']) + '\t' +
+                          str(value['query_time']) + '\t' + stdout + '\t' + stderr + '\t' + errors + '\n')
 
 
 def is_expiring(life_time: int, req_time: datetime) -> bool:

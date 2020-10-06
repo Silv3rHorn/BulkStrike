@@ -86,9 +86,14 @@ def get_info(host: str, file: str, log: bool):
         for host_info in response.get('resources', {}):
             hosts_info.append(host_info)
 
-    helpers.print_host_info(hosts_info)
     if log:
-        helpers.dict_to_tsv('hosts_info_', hosts_info)
+        timestamp = datetime.now().strftime("%Y-%m-%d@%H%M%S")
+        filename = "hosts_info_" + timestamp + ".tsv"
+        with open(filename, 'w') as outfile:
+            outfile.write("Hostname\tHost ID\tLast Seen\tOS Version\tManufacturer\tProduct\tAgent Version\n")
+            helpers.print_host_info(hosts_info, outfile)
+    else:
+        helpers.print_host_info(hosts_info, None)
 
 
 def list_files(action: str):
@@ -174,19 +179,19 @@ def start_rtr(host: str, file: str, log: bool, queue: bool):
 
     response = cs_methods.init_rtr_session(host_ids, queue)
 
-    failed_hosts = []
-    for host in response['resources']:
-        if log:
-            helpers.dict_to_tsv('rtr_hosts_', response['resources'])
-        if response['resources'][host]['complete'] is False:
-            failed_hosts.append(response['resources'][host]['aid'])
-    helpers.print_rtr_comms_status(response['resources'])
+    if log:
+        timestamp = datetime.now().strftime("%Y-%m-%d@%H%M%S")
+        filename = "rtr_hosts_" + timestamp + ".tsv"
+        with open(filename, 'w') as outfile:
+            outfile.write("Host ID\tComplete\tOffline Queued\n")
+            helpers.print_rtr_comms_status(response['resources'], outfile)
+    else:
+        helpers.print_rtr_comms_status(response['resources'], None)
 
     if len(response['errors']) == 0:
         print("RTR session started...")
         print("type 'bulk <file path>' to execute multiple commands")
 
-        outfile = None
         choice = 1
         if log:
             timestamp = datetime.now().strftime("%Y-%m-%d@%H%M%S")
@@ -201,7 +206,7 @@ def start_rtr(host: str, file: str, log: bool, queue: bool):
         else:
             while choice != 2:
                 full_cmd = input("(type exit to end) > ")
-                choice = helpers.execute_command(full_cmd, outfile)
+                choice = helpers.execute_command(full_cmd, None)
     else:
         print("RTR session was not started.")
         sys.exit(1)
