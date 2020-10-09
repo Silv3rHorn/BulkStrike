@@ -86,14 +86,13 @@ def get_info(host: str, file: str, log: bool):
         for host_info in response.get('resources', {}):
             hosts_info.append(host_info)
 
+    helpers.print_host_info(hosts_info)
     if log:
         timestamp = datetime.now().strftime("%Y-%m-%d@%H%M%S")
         filename = "hosts_info_" + timestamp + ".tsv"
         with open(filename, 'w') as outfile:
             outfile.write("Hostname\tHost ID\tLast Seen\tOS Version\tManufacturer\tProduct\tAgent Version\n")
-            helpers.print_host_info(hosts_info, outfile)
-    else:
-        helpers.print_host_info(hosts_info, None)
+            helpers.log_host_info(hosts_info, outfile)
 
 
 def list_files(action: str):
@@ -179,14 +178,13 @@ def start_rtr(host: str, file: str, log: bool, queue: bool):
 
     response = cs_methods.init_rtr_session(host_ids, queue)
 
+    helpers.print_rtr_comms_status(response['resources'])
     if log:
         timestamp = datetime.now().strftime("%Y-%m-%d@%H%M%S")
         filename = "rtr_hosts_" + timestamp + ".tsv"
         with open(filename, 'w') as outfile:
             outfile.write("Host ID\tComplete\tOffline Queued\n")
-            helpers.print_rtr_comms_status(response['resources'], outfile)
-    else:
-        helpers.print_rtr_comms_status(response['resources'], None)
+            helpers.log_rtr_comms_status(response['resources'], outfile)
 
     if len(response['errors']) == 0:
         print("RTR session started...")
