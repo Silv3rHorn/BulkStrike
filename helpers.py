@@ -139,10 +139,8 @@ def log_cmd_response(response: dict, outfile):
         stdout = str(value['stdout']).replace('\r', ' ').replace('\n', ' ')
         stderr = str(value['stderr']).replace('\r', ' ').replace('\n', ' ')
         errors = str(value['errors']).replace('\r', ' ').replace('\n', ' ')
-        outfile.write(str(value['session_id']) + '\t' + str(value['task_id']) + '\t' + str(value['aid']) + '\t' +
-                      str(value['base_command']) + '\t' + str(value['complete']) + '\t' +
-                      str(value['offline_queued']) + '\t' + str(value['query_time']) + '\t' +
-                      stdout + '\t' + stderr + '\t' + errors + '\n')
+        outfile.write(str(value['aid']) + '\t' + str(value['complete']) + '\t' + str(value['offline_queued']) + '\t' +
+                      str(value['query_time']) + '\t' + stdout + '\t' + stderr + '\t' + errors + '\n')
 
 
 def is_expiring(life_time: int, req_time: datetime) -> bool:

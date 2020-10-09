@@ -195,12 +195,10 @@ def start_rtr(host: str, file: str, log: bool, queue: bool):
             timestamp = datetime.now().strftime("%Y-%m-%d@%H%M%S")
             filename = "rtr_response_" + timestamp + ".tsv"
             with open(filename, 'w') as outfile:
-                outfile.write("Session ID\tTask ID\tHost ID\tBase Command\tComplete\tOffline Queued\tQuery Duration\t"
-                              "Stdout\tStderr\tErrors\n")
+                outfile.write("Host ID\tComplete\tOffline Queued\tQuery Duration\tStdout\tStderr\tErrors\n")
                 while choice != 2:
                     full_cmd = input("(type exit to end) > ")
                     choice = helpers.execute_command(full_cmd, outfile)
-                    outfile.flush()
         else:
             while choice != 2:
                 full_cmd = input("(type exit to end) > ")
