@@ -1,9 +1,9 @@
 import cs_methods
-import csv
 import os
 import re
 import sys
 from datetime import datetime, timezone
+from tabulate import tabulate
 
 read_only = ['cat', 'cd', 'clear', 'csrutil', 'env', 'eventlog', 'filehash', 'getsid', 'history', 'ifconfig',
              'ipconfig', 'ls', 'mount', 'netstat', 'ps', 'reg query', 'users']
@@ -72,10 +72,9 @@ def execute_command(full_cmd: str, outfile) -> int:
 
 
 def print_host_info(hosts_info: list):
-    if len(hosts_info) > 0:
-        print("{:<20} {:<36} {:<32} {:<16} {:<16} {:<24} {:<24}".format('Hostname', 'Host ID', 'Last Seen',
-                                                                        'OS Version', 'Manufacturer', 'Product',
-                                                                        'Agent Version'))
+    headers = ['Hostname', 'Host ID', 'Last Seen', 'OS Version', 'Manufacturer', 'Product', 'Agent Version']
+    data = list()
+
     for host_info in hosts_info:
         # convert last_seen to relative time
         last_seen = datetime.strptime(host_info['last_seen'], '%Y-%m-%dT%H:%M:%SZ')
@@ -83,21 +82,21 @@ def print_host_info(hosts_info: list):
         delta = datetime.now().replace(tzinfo=None).astimezone(tz=None) - last_seen
         last_seen_relative = str(delta.days) + " days, " + str(delta.seconds // 3600) + " hrs, " + \
                              str((delta.seconds // 60) % 60) + " mins ago"
+        data.append([host_info['hostname'], host_info['device_id'], last_seen_relative, host_info['os_version'],
+                     host_info['system_manufacturer'], host_info['system_product_name'], host_info['agent_version']])
 
-        # print host info
-        print("{:<20} {:<36} {:<32} {:<16} {:<16} {:<24} {:<24}".format(host_info['hostname'], host_info['device_id'],
-                                                                        last_seen_relative, host_info['os_version'],
-                                                                        host_info['system_manufacturer'],
-                                                                        host_info['system_product_name'],
-                                                                        host_info['agent_version']))
+    print(tabulate(data, headers, tablefmt='pretty'))
 
 
 def print_rtr_comms_status(rtr_status: dict):
+    headers = ['Host ID', 'Completed', 'Offline Queued']
+    data = list()
+
     rtr_status = list(rtr_status.values())
-    if len(rtr_status) > 0:
-        print("{:<36} {:<12} {:<18}".format('Host ID', 'Complete', 'Offline Queued'))
     for host in rtr_status:
-        print("{:<36} {:<12} {:<18}".format(host['aid'], str(host['complete']), str(host['offline_queued'])))
+        data.append([host['aid'], str(host['complete']), str(host['offline_queued'])])
+
+    print(tabulate(data, headers, tablefmt='pretty'))
 
 
 def print_cmd_response(response: dict):
