@@ -89,7 +89,7 @@ def print_host_info(hosts_info: list):
 
 
 def print_rtr_comms_status(rtr_status: dict):
-    headers = ['Host ID', 'Completed', 'Offline Queued']
+    headers = ['Host ID', 'Connected', 'Offline Queued']
     data = list()
 
     rtr_status = list(rtr_status.values())
@@ -129,7 +129,7 @@ def log_host_info(hosts_info: list, outfile):
 def log_rtr_comms_status(rtr_status: dict, outfile):
     rtr_status = list(rtr_status.values())
     for host in rtr_status:
-        outfile.write(str(host['aid']) + '\t' + str(host['complete']) + '\t' + str(host['offline_queued']) + '\n')
+        outfile.write(str(host['aid']) + '\t' + str(host['connected']) + '\t' + str(host['offline_queued']) + '\n')
 
 
 def log_cmd_response(response: dict, outfile):
