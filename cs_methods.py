@@ -88,8 +88,10 @@ def http_request(method: str, url_suffix: str, params: dict = None, data: dict =
             print(err_msg)
         return resp_json
     except ValueError as exception:
-        raise ValueError(
-            f'Failed to parse json object from response: {exception} - {response.content}')  # type: ignore[str-bytes-safe]
+        if url_suffix == '/real-time-response/entities/sessions/v1' and method == 'DELETE':  # empty json when success
+            pass
+        else:
+            raise ValueError(f'Failed to parse json object from response: {exception} - {response.content}')
 
 
 def get_token(new_token: bool = False) -> str:
@@ -413,5 +415,79 @@ def run_batch_cmd(command_type: str, full_command: str) -> dict:
         'command_string': full_command
     })
     response = http_request('POST', endpoint_url, params=params, data=body)
+
+    return response
+
+
+def get_qsessions() -> dict:
+    """
+        Get session ids of currently queued RTR sessions
+    """
+    endpoint_url = '/real-time-response/queries/sessions/v1'
+
+    if helpers.is_expiring(BATCH_LIFE_TIME, BATCH_REQ_TIME):
+        refresh_rtr_session()
+
+    params = {
+        'filter': 'commands_queued:1'
+    }
+    response = http_request('GET', endpoint_url, params=params)
+
+    return response
+
+
+def get_qsessions_metadata(session_ids: list) -> dict:
+    """
+        Get metadata of currently queued RTR sessions by session IDs
+        :param session_ids: List of session ids to retrieve metadata for
+    """
+    endpoint_url = '/real-time-response/entities/queued-sessions/GET/v1'
+
+    if helpers.is_expiring(BATCH_LIFE_TIME, BATCH_REQ_TIME):
+        refresh_rtr_session()
+
+    body = json.dumps({
+        'ids': session_ids
+    })
+    response = http_request('POST', endpoint_url, data=body)
+
+    return response
+
+
+def delete_qsession(session_id: str) -> dict:
+    """
+        Delete a queued RTR session by session ID
+        :param session_id: Session ID of session to delete
+    """
+    endpoint_url = '/real-time-response/entities/sessions/v1'
+
+    if helpers.is_expiring(BATCH_LIFE_TIME, BATCH_REQ_TIME):
+        refresh_rtr_session()
+
+    params = {
+        'session_id': session_id
+    }
+    response = http_request('DELETE', endpoint_url, params=params)
+
+    return response
+
+
+def delete_qsession_command(session_id: str, cloud_request_id: str) -> dict:
+    """
+        Delete a queued RTR session command by session ID and cloud request ID
+        :param session_id:
+        :param cloud_request_id:
+    """
+
+    endpoint_url = '/real-time-response/entities/queued-sessions/command/v1'
+
+    if helpers.is_expiring(BATCH_LIFE_TIME, BATCH_REQ_TIME):
+        refresh_rtr_session()
+
+    params = {
+        'session_id': session_id,
+        'cloud_request_id': cloud_request_id
+    }
+    response = http_request('DELETE', endpoint_url, params=params)
 
     return response

@@ -18,8 +18,12 @@ Else, refer to requirements.txt
 * Start using BulkStrike!
 * More help available via `bulk_stike -h` 
 ```bash
-usage: bulk_strike.py action [-s HOST] [-f FILE] [-i ID] [-d DESCRIPTION]
-                      [-p PERMISSION]               
+usage: bulk_strike.py [-h] [-c CLOUDREQID] [-d DESCRIPTION] [-f FILE] [-i ID]
+                      [-p PERMISSION] [-q QSESSIONID] [-s HOST] [--log]
+                      [--queue]
+                      action
+
+BulkStrike enables the usage of CrowdStrike Real Time Response (RTR) to bulk execute commands on multiple machines.
 
 positional arguments:
   action                                Req Arguments              Description
@@ -35,17 +39,25 @@ positional arguments:
                         upload_script   -f and -p [-d]             upload a RTR response file to CrowdStrike Cloud.
                         delete_script   -i                         delete a RTR response file from CrowdStrike Cloud.
                         start_rtr       -s or -f [--log] [--queue] initialise rtr session on specified hosts.
+                        get_qsessions   NIL                        get session ids of RTR sessions that had commands queued.
+                        get_qsess_data  NIL [--log]                get metadata of RTR sessions that had commands queued.
+                        del_qsession    -q                         delete a currently queued RTR session.
+                        del_qsess_cmd   -q and -c                  delete a currently queued RTR session command.
 
 optional arguments:
   -h, --help            show this help message and exit
-  -s HOST, --host HOST  host id or hostname
-  -f FILE, --file FILE  path of file containing host ids or hostnames
-  -i ID, --id ID        id of RTR response file or script
+  -c CLOUDREQID, --cloudreqid CLOUDREQID
+                        cloud request id of currently queued RTR session command
   -d DESCRIPTION, --description DESCRIPTION
                         description of RTR response file or script
+  -f FILE, --file FILE  path of file containing host ids or hostnames
+  -i ID, --id ID        id of RTR response file or script
   -p PERMISSION, --permission PERMISSION
-                        permission of RTR response script (private, group, public)
-  --log                 write console output to tsv file in current working directory
+                        permission of RTR response script (private, group, public
+  -q QSESSIONID, --qsessionid QSESSIONID
+                        session id of currently queued RTR session
+  -s HOST, --host HOST  host id or hostname
+  --log                 write raw server response to tsv file in current working directory
   --queue               queue commands to offline hosts
 ```
 

@@ -111,6 +111,25 @@ def print_cmd_response(response: dict):
         print()
 
 
+def print_qsessions_metadata(sessions: list):
+    headers = ['Session ID', 'Created At', 'Updated At', 'Deleted At', 'Host ID', 'Status', 'Cmd String', 'Cmd Status']
+    data = list()
+
+    for session in sessions:
+        session_id = session['id']
+        created_at = session['created_at']
+        updated_at = session['updated_at']
+        deleted_at = session['deleted_at']
+        aid = session['aid']
+        status = session['status']
+        commands = session['Commands']
+        for command in commands:
+            data.append([session_id, created_at, updated_at, deleted_at, aid, status, command['command_string'],
+                         command['status']])
+
+    print(tabulate(data, headers, tablefmt='pretty'))
+
+
 def log_host_info(hosts_info: list, outfile):
     for host_info in hosts_info:
         # convert last_seen to relative time
@@ -129,7 +148,7 @@ def log_host_info(hosts_info: list, outfile):
 def log_rtr_comms_status(rtr_status: dict, outfile):
     rtr_status = list(rtr_status.values())
     for host in rtr_status:
-        outfile.write(str(host['aid']) + '\t' + str(host['connected']) + '\t' + str(host['offline_queued']) + '\n')
+        outfile.write(str(host['aid']) + '\t' + str(host['complete']) + '\t' + str(host['offline_queued']) + '\n')
 
 
 def log_cmd_response(response: dict, outfile):
@@ -140,6 +159,22 @@ def log_cmd_response(response: dict, outfile):
         errors = str(value['errors']).replace('\r', ' ').replace('\n', ' ')
         outfile.write(str(value['aid']) + '\t' + str(value['complete']) + '\t' + str(value['offline_queued']) + '\t' +
                       str(value['query_time']) + '\t' + stdout + '\t' + stderr + '\t' + errors + '\n')
+
+
+def log_qsessions_metadata(sessions: list, outfile):
+    for session in sessions:
+        session_id = str(session['id'])
+        created_at = str(session['created_at'])
+        updated_at = str(session['updated_at'])
+        deleted_at = str(session['deleted_at'])
+        aid = str(session['aid'])
+        status = str(session['status'])
+        commands = session['Commands']
+        for command in commands:
+            outfile.write(session_id + '\t' + created_at + '\t' + updated_at + '\t' + deleted_at + '\t' + aid + '\t' +
+                          status + '\t' + str(command['cloud_request_id']) + '\t' + str(command['command_string']) +
+                          '\t' + str(command['created_at']) + '\t' + str(command['updated_at']) + '\t' +
+                          str(command['deleted_at']) + '\t' + str(command['status']) + '\n')
 
 
 def is_expiring(life_time: int, req_time: datetime) -> bool:

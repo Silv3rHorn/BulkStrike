@@ -183,7 +183,7 @@ def start_rtr(host: str, file: str, log: bool, queue: bool):
         timestamp = datetime.now().strftime("%Y-%m-%d@%H%M%S")
         filename = "rtr_hosts_" + timestamp + ".tsv"
         with open(filename, 'w') as outfile:
-            outfile.write("Host ID\tComplete\tOffline Queued\n")
+            outfile.write("Host ID\tConnected\tOffline Queued\n")
             helpers.log_rtr_comms_status(response['resources'], outfile)
 
     if len(response['errors']) == 0:
@@ -208,10 +208,50 @@ def start_rtr(host: str, file: str, log: bool, queue: bool):
         sys.exit(1)
 
 
+def get_qsessions(to_print: bool) -> list:
+    response = cs_methods.get_qsessions()
+    if len(response['errors']) == 0:
+        resources = response.get('resources', {})
+        if to_print:
+            for session_id in resources:
+                print(session_id)
+        return resources
+    sys.exit(1)
+
+
+def get_qsessions_metadata(log: bool):
+    session_ids = get_qsessions(False)
+    if session_ids is None:
+        print("Error! No session metadata to return.")
+        sys.exit(1)
+
+    sessions = cs_methods.get_qsessions_metadata(session_ids).get('resources', {})
+    helpers.print_qsessions_metadata(sessions)
+    if log:
+        timestamp = datetime.now().strftime("%Y-%m-%d@%H%M%S")
+        filename = "qsessions_metadata_" + timestamp + ".tsv"
+        with open(filename, 'w') as outfile:
+            outfile.write("Session ID\tCreated At\tUpdated At\tDeleted At\tHost ID\tStatus\tCloud Request ID\t"
+                          "Cmd String\tCmd Created At\tCmd Updated At\tCmd Deleted At\tCmd Status\n")
+            helpers.log_qsessions_metadata(sessions, outfile)
+
+
+def del_qsession(qsessionid: str):
+    response = cs_methods.delete_qsession(qsessionid)
+    if response is None:
+        print("Session ({}) was successfully deleted.".format(qsessionid))
+
+
+def del_qsession_cmd(qsessionid: str, cloudreqid: str):
+    response = cs_methods.delete_qsession_command(qsessionid, cloudreqid)
+    if 'errors' not in response:
+        print("Command ({0}) of session ({1}) was successfully deleted.".format(cloudreqid, qsessionid))
+
+
 def main():
     argument_parser = argparse.ArgumentParser(description=(
-        'BulkStrike enables the usage of CrowdStrike Real Time Response (RTR) to bulk collect artifacts '
-        'from multiple machines.\n'
+        'BulkStrike enables the usage of CrowdStrike Real Time Response (RTR) to bulk execute commands on '
+        'multiple machines.\n'
     ), formatter_class=argparse.RawTextHelpFormatter)
 
     argument_parser.add_argument('action', metavar='action', default=None, help=(
@@ -227,17 +267,27 @@ def main():
         'get_script      -i                         get detailed info of a RTR response file on CrowdStrike Cloud.\n'
         'upload_script   -f and -p [-d]             upload a RTR response file to CrowdStrike Cloud.\n'
         'delete_script   -i                         delete a RTR response file from CrowdStrike Cloud.\n'
-        'start_rtr       -s or -f [--log] [--queue] initialise rtr session on specified hosts.\n'))
-    argument_parser.add_argument('-s', '--host', default=None, help=(
-        'host id or hostname'))
+        'start_rtr       -s or -f [--log] [--queue] initialise rtr session on specified hosts.\n'
+        'get_qsessions   NIL                        get session ids of RTR sessions that had commands queued.\n'
+        'get_qsess_data  NIL [--log]                get metadata of RTR sessions that had commands queued.\n'
+        'del_qsession    -q                         delete a currently queued RTR session.\n'
+        'del_qsess_cmd   -q and -c                  delete a currently queued RTR session command.\n'))
+
+    argument_parser.add_argument('-c', '--cloudreqid', default=None, help=(
+        'cloud request id of currently queued RTR session command'))
+    argument_parser.add_argument('-d', '--description', default=None, help=(
+        'description of RTR response file or script'))
     argument_parser.add_argument('-f', '--file', default=None, help=(
         'path of file containing host ids or hostnames'))
     argument_parser.add_argument('-i', '--id', default=None, help=(
         'id of RTR response file or script'))
-    argument_parser.add_argument('-d', '--description', default=None, help=(
-        'description of RTR response file or script'))
     argument_parser.add_argument('-p', '--permission', default=None, help=(
         'permission of RTR response script (private, group, public'))
+    argument_parser.add_argument('-q', '--qsessionid', default=None, help=(
+        'session id of currently queued RTR session'))
+    argument_parser.add_argument('-s', '--host', default=None, help=(
+        'host id or hostname'))
+
     argument_parser.add_argument('--log', action='store_true', help="write raw server response to tsv file in current "
                                                                     "working directory")
     argument_parser.add_argument('--queue', action='store_true', help="queue commands to offline hosts")
@@ -269,6 +319,14 @@ def main():
         upload_file(options.file, options.description)
     elif options.action == 'upload_script':
         upload_script(options.file, options.permission, options.description)
+    elif options.action == 'get_qsessions':
+        get_qsessions(True)
+    elif options.action == 'get_qsess_data':
+        get_qsessions_metadata(options.log)
+    elif options.action == 'del_qsession':
+        del_qsession(options.qsessionid)
+    elif options.action == 'del_qsess_cmd':
+        del_qsession_cmd(options.qsessionid, options.cloudreqid)
 
 
 if __name__ == '__main__':
