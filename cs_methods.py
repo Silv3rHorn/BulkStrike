@@ -429,7 +429,6 @@ def get_qsessions() -> dict:
         refresh_rtr_session()
 
     params = {
-        'sort': 'created_at|desc',
         'filter': 'commands_queued:1'
     }
     response = http_request('GET', endpoint_url, params=params)
