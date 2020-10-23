@@ -89,12 +89,12 @@ def print_host_info(hosts_info: list):
 
 
 def print_rtr_comms_status(rtr_status: dict):
-    headers = ['Host ID', 'Connected', 'Offline Queued']
+    headers = ['Host ID', 'Session ID', 'Connected', 'Offline Queued']
     data = list()
 
     rtr_status = list(rtr_status.values())
     for host in rtr_status:
-        data.append([host['aid'], str(host['complete']), str(host['offline_queued'])])
+        data.append([host['aid'], host['session_id'], str(host['complete']), str(host['offline_queued'])])
 
     print(tabulate(data, headers, tablefmt='pretty'))
 
@@ -148,7 +148,8 @@ def log_host_info(hosts_info: list, outfile):
 def log_rtr_comms_status(rtr_status: dict, outfile):
     rtr_status = list(rtr_status.values())
     for host in rtr_status:
-        outfile.write(str(host['aid']) + '\t' + str(host['complete']) + '\t' + str(host['offline_queued']) + '\n')
+        outfile.write(str(host['aid']) + '\t' + str(host['session_id']) + '\t' + str(host['complete']) + '\t' +
+                      str(host['offline_queued']) + '\n')
 
 
 def log_cmd_response(response: dict, outfile):
@@ -157,7 +158,8 @@ def log_cmd_response(response: dict, outfile):
         stdout = str(value['stdout']).replace('\r', ' ').replace('\n', ' ')
         stderr = str(value['stderr']).replace('\r', ' ').replace('\n', ' ')
         errors = str(value['errors']).replace('\r', ' ').replace('\n', ' ')
-        outfile.write(str(value['aid']) + '\t' + str(value['complete']) + '\t' + str(value['offline_queued']) + '\t' +
+        outfile.write(str(value['aid']) + '\t' + str(value['session_id']) + '\t' +
+                      str(value['complete']) + '\t' + str(value['offline_queued']) + '\t' +
                       str(value['query_time']) + '\t' + stdout + '\t' + stderr + '\t' + errors + '\n')
 
 

@@ -183,7 +183,7 @@ def start_rtr(host: str, file: str, log: bool, queue: bool):
         timestamp = datetime.now().strftime("%Y-%m-%d@%H%M%S")
         filename = "rtr_hosts_" + timestamp + ".tsv"
         with open(filename, 'w') as outfile:
-            outfile.write("Host ID\tConnected\tOffline Queued\n")
+            outfile.write("Host ID\tSession ID\tConnected\tOffline Queued\n")
             helpers.log_rtr_comms_status(response['resources'], outfile)
 
     if len(response['errors']) == 0:
@@ -195,7 +195,7 @@ def start_rtr(host: str, file: str, log: bool, queue: bool):
             timestamp = datetime.now().strftime("%Y-%m-%d@%H%M%S")
             filename = "rtr_response_" + timestamp + ".tsv"
             with open(filename, 'w') as outfile:
-                outfile.write("Host ID\tComplete\tOffline Queued\tQuery Duration\tStdout\tStderr\tErrors\n")
+                outfile.write("Host ID\tSession ID\tComplete\tOffline Queued\tQuery Duration\tStdout\tStderr\tErrors\n")
                 while choice != 2:
                     full_cmd = input("(type exit to end) > ")
                     choice = helpers.execute_command(full_cmd, outfile)
