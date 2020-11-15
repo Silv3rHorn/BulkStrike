@@ -53,13 +53,16 @@ optional arguments:
   -f FILE, --file FILE  path of file containing host ids or hostnames
   -i ID, --id ID        id of RTR response file or script
   -p PERMISSION, --permission PERMISSION
-                        permission of RTR response script (private, group, public
+                        permission of RTR response script (private, group, public)
   -q QSESSIONID, --qsessionid QSESSIONID
                         session id of currently queued RTR session
   -s HOST, --host HOST  host id or hostname
   --log                 write raw server response to tsv file in current working directory
   --queue               queue commands to offline hosts
 ```
+
+## Demo
+![](demo.gif)
 
 ## Future Work
 1. Create parallel thread to keep RTR session alive
