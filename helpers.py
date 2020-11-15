@@ -27,7 +27,7 @@ def file_to_list(path: str) -> list:
         hosts = [host.strip() for host in hosts]
     else:
         print("Error! File path does not exist.")
-        sys.exit(1)
+        return []
 
     return hosts
 

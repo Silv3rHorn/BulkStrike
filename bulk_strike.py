@@ -20,8 +20,12 @@ def init(read_creds: bool = True, read_token: bool = True):
     if read_creds:
         if os.path.isfile(CRED_PATH):  # previously saved credentials exist
             with open(CRED_PATH) as infile:
-                cs_methods.CLIENT_ID = infile.readline().split(":")[1].strip()
-                cs_methods.SECRET = infile.readline().split(":")[1].strip()
+                try:
+                    cs_methods.CLIENT_ID = infile.readline().split(":")[1].strip()
+                    cs_methods.SECRET = infile.readline().split(":")[1].strip()
+                except IndexError:
+                    print("Error! Credential file format is invalid. Please run bulk_strike configure again.")
+                    sys.exit(1)
         else:
             print("Error! No CrowdStrike ID or Secret available.")
             sys.exit(1)
@@ -63,7 +67,9 @@ def configure():
 
 def req_token():
     init(read_creds=True, read_token=False)
-    cs_methods.get_token(new_token=True)
+    access_token = cs_methods.get_token(new_token=True)
+    if access_token is not None:
+        print("Authentication token successfully requested: {}".format(access_token))
 
 
 def get_info(host: str, file: str, log: bool):
@@ -282,7 +288,7 @@ def main():
     argument_parser.add_argument('-i', '--id', default=None, help=(
         'id of RTR response file or script'))
     argument_parser.add_argument('-p', '--permission', default=None, help=(
-        'permission of RTR response script (private, group, public'))
+        'permission of RTR response script (private, group, public)'))
     argument_parser.add_argument('-q', '--qsessionid', default=None, help=(
         'session id of currently queued RTR session'))
     argument_parser.add_argument('-s', '--host', default=None, help=(

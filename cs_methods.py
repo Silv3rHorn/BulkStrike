@@ -79,7 +79,7 @@ def http_request(method: str, url_suffix: str, params: dict = None, data: dict =
                 reason=reason
             )
             # try to create a new token
-            if response.status_code == 403:
+            if response.status_code in (401, 403):
                 if helpers.is_expiring(TOKEN_LIFE_TIME, TOKEN_REQ_TIME):
                     get_token(new_token=True)
                     return http_request(method, url_suffix, params, data, HEADERS, files, safe, get_token_flag=False)
