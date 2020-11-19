@@ -8,7 +8,8 @@ from tabulate import tabulate
 read_only = ['cat', 'cd', 'clear', 'csrutil', 'env', 'eventlog', 'filehash', 'getsid', 'history', 'ifconfig',
              'ipconfig', 'ls', 'mount', 'netstat', 'ps', 'reg query', 'users']
 active_responder = ['cp', 'encrypt', 'get', 'kill', 'map', 'memdump', 'mkdir', 'mv', 'reg set' 'reg delete', 'reg load'
-                    'reg unload', 'restart', 'rm', 'runscript', 'shutdown', 'umount', 'unmap', 'xmemdump', 'zip']
+                    'reg unload', 'restart', 'rm', 'runscript', 'shutdown', 'umount', 'unmap', 'update', 'xmemdump',
+                    'zip']
 rtr_admin = ['put', 'run']
 
 
