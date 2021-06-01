@@ -20,10 +20,12 @@ def init(read_creds: bool = True, read_token: bool = True):
     if read_creds:
         if os.path.isfile(CRED_PATH):  # previously saved credentials exist
             with open(CRED_PATH) as infile:
+                lines = infile.readlines()
                 try:
-                    cs_methods.CLIENT_ID = infile.readline().split(":")[1].strip()
-                    cs_methods.SECRET = infile.readline().split(":")[1].strip()
-                    cs_methods.SERVER = infile.readline().split(": ")[1].strip()
+                    cs_methods.CLIENT_ID = lines[0].split(":")[1].strip()
+                    cs_methods.SECRET = lines[1].split(":")[1].strip()
+                    if len(lines) > 2:
+                        cs_methods.SERVER = lines[2].split(": ")[1].strip()
                 except IndexError:
                     print("Error! Credential file format is invalid. Please run bulkstrike configure again.")
                     os.remove(CRED_PATH)
