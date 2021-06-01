@@ -23,6 +23,7 @@ def init(read_creds: bool = True, read_token: bool = True):
                 try:
                     cs_methods.CLIENT_ID = infile.readline().split(":")[1].strip()
                     cs_methods.SECRET = infile.readline().split(":")[1].strip()
+                    cs_methods.SERVER = infile.readline().split(": ")[1].strip()
                 except IndexError:
                     print("Error! Credential file format is invalid. Please run bulk_strike configure again.")
                     sys.exit(1)
@@ -56,12 +57,16 @@ def configure():
 
     temp_client_id = input("CrowdStrike Client ID [{}]: ".format(masked_client_id))
     temp_secret = input("CrowdStrike Secret [{}]: ".format(masked_secret))
+    temp_server = input("CrowdStrike API Server [{}]: ".format(cs_methods.SERVER)).rstrip('/')
     if temp_client_id != '':
         cs_methods.CLIENT_ID = temp_client_id
     if temp_secret != '':
         cs_methods.SECRET = temp_secret
+    if temp_server != '':
+        cs_methods.SERVER = temp_server
     with open(CRED_PATH, 'w') as outfile:
-        outfile.writelines(["Client ID: {}".format(cs_methods.CLIENT_ID), "\nSecret: {}".format(cs_methods.SECRET)])
+        outfile.writelines(["Client ID: {}".format(cs_methods.CLIENT_ID), "\nSecret: {}".format(cs_methods.SECRET),
+                            "\nAPI Server: {}".format(cs_methods.SERVER)])
     init(read_creds=False, read_token=False)
 
 
