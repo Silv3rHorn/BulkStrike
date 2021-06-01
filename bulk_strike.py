@@ -25,7 +25,8 @@ def init(read_creds: bool = True, read_token: bool = True):
                     cs_methods.SECRET = infile.readline().split(":")[1].strip()
                     cs_methods.SERVER = infile.readline().split(": ")[1].strip()
                 except IndexError:
-                    print("Error! Credential file format is invalid. Please run bulk_strike configure again.")
+                    print("Error! Credential file format is invalid. Please run bulkstrike configure again.")
+                    os.remove(CRED_PATH)
                     sys.exit(1)
         else:
             print("Error! No CrowdStrike ID or Secret available.")
