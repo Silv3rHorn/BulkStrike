@@ -27,7 +27,7 @@ BulkStrike enables the usage of CrowdStrike Real Time Response (RTR) to bulk exe
 
 positional arguments:
   action                                Req Arguments              Description
-                        configure       NIL                        provide CrowdStrike Client ID and/or Secret.
+                        configure       NIL                        provide CrowdStrike Client ID, Secret and API server.
                         req_token       NIL                        request for CrowdStrike authentication token.
                         get_info        -s or -f [--log]           get system info of provided host id or hostname.
                         list_files      NIL                        list basic info of all RTR response files on CrowdStrike Cloud.
