@@ -143,9 +143,9 @@ def get_token_request() -> str:
 
 def find_hosts(hostnames: str) -> list:
     """
-    Find specific hosts based on hostname(s)
-    :param hostnames:  Hostname(s)
-    :return: List of host id(s)
+        Find specific hosts based on hostname(s)
+        :param hostnames:  Hostname(s)
+        :return: List of host id(s)
     """
     uri_path = '/devices/queries/devices/v1'
     params = dict()
@@ -157,13 +157,26 @@ def find_hosts(hostnames: str) -> list:
 
 def get_host_info(host_ids: list) -> dict:
     """
-        Get info about one of more hosts
+        Get info about one or more hosts
         :param host_ids: List of host id(s) to get info about
+        :return: Info of hosts that corresponds to the provided id(s)
     """
     uri_path = '/devices/entities/devices/v1'
     params = dict()
     params['ids'] = host_ids
     return http_request('GET', uri_path, params, get_token_flag=False)
+
+
+def get_host_logins(host_ids: list) -> dict:
+    """
+        Get recent logs of one or more hosts
+        :param host_ids: List of host id(s) to get recent logs
+        :return: Recent logins that corresponds to the provided id(s)
+    """
+    uri_path = '/devices/combined/devices/login-history/v1'
+    body = dict()
+    body['ids'] = host_ids
+    return http_request('POST', uri_path, data=body)
 
 
 def upload_file(path: str, description: str) -> tuple:

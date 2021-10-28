@@ -88,6 +88,17 @@ def print_host_info(hosts_info: list):
     print(tabulate(data, headers, tablefmt='pretty'))
 
 
+def print_host_logins(host_logins: list):
+    headers = ['Host ID', 'Hostname', 'Username', 'Last Seen', 'First Seen']
+    data = list()
+
+    for host_login in host_logins:
+        for key, value in host_login['logins'].items():
+            data.append([host_login['host_id'], host_login['hostname'], key, value['last_seen'], value['first_seen']])
+
+    print(tabulate(data, headers, tablefmt='pretty'))
+
+
 def print_rtr_comms_status(rtr_status: dict):
     headers = ['Host ID', 'Session ID', 'Connected', 'Offline Queued']
     data = list()

@@ -30,6 +30,7 @@ positional arguments:
                         configure       NIL                        provide CrowdStrike Client ID, Secret and API server.
                         req_token       NIL                        request for CrowdStrike authentication token.
                         get_info        -s or -f [--log]           get system info of provided host id or hostname.
+                        get_logins      -s or -f [--log] [--clean] get recent logins of provided host ids.
                         list_files      NIL                        list basic info of all RTR response files on CrowdStrike Cloud.
                         get_file        -i                         get detailed info of a RTR response file on CrowdStrike Cloud.
                         upload_file     -f and -d                  upload a RTR response file to CrowdStrike Cloud.
@@ -59,6 +60,7 @@ optional arguments:
   -s HOST, --host HOST  host id or hostname
   --log                 write raw server response to tsv file in current working directory
   --queue               queue commands to offline hosts
+  --clean               exclude less important details from output
 ```
 
 ## Demo

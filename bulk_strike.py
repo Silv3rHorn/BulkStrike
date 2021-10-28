@@ -109,6 +109,60 @@ def get_info(host: str, file: str, log: bool):
             helpers.log_host_info(hosts_info, outfile)
 
 
+def get_logins(host: str, file: str, log: bool, clean: bool):
+    if host is not None:
+        req_hosts = host.split(',')
+    elif file is not None:
+        req_hosts = helpers.file_to_list(file)
+    else:
+        print("Error! No host id or hostname provided.")
+        sys.exit(1)
+
+    # get hostnames
+    hosts_info = dict()
+    resources = cs_methods.get_host_info(req_hosts).get('resources', {})
+    for resource in resources:
+        hosts_info[resource['device_id']] = resource['hostname']
+
+    hosts_logins = list()
+    if len(hosts_info) > 0:
+        req_hosts = list(hosts_info.keys())
+        resources = cs_methods.get_host_logins(req_hosts).get('resources', {})
+
+        for resource in resources:
+            recent_logins = resource['recent_logins']
+            agg_logins = dict()
+            for recent_login in recent_logins:
+                username = recent_login['user_name']
+                if clean and (username.startswith('root@') or username.startswith('_') or username.startswith('daemon')
+                              or username.startswith('postgres') or username.startswith('nobody') or 'DWM-' in username
+                              or 'UMFD-' in username or username.endswith('$') or 'LOCAL SERVICE' in username
+                              or 'NETWORK SERVICE' in username):
+                    continue
+                if username in agg_logins:
+                    if recent_login['login_time'] > agg_logins[username]['last_seen']:
+                        agg_logins[username]['last_seen'] = recent_login['login_time']
+                    elif recent_login['login_time'] < agg_logins[username]['last_seen']:
+                        agg_logins[username]['first_seen'] = recent_login['login_time']
+                else:
+                    agg_logins[username] = dict()
+                    agg_logins[username]['first_seen'] = recent_login['login_time']
+                    agg_logins[username]['last_seen'] = recent_login['login_time']
+            hosts_logins.append({"host_id": resource['device_id'], "hostname": hosts_info[resource['device_id']],
+                                 "logins": agg_logins})
+
+    helpers.print_host_logins(hosts_logins)
+    if log:
+        timestamp = datetime.now().strftime("%Y-%m-%d@%H%M%S")
+        filename = "hosts_logins_" + timestamp + ".tsv"
+        with open(filename, 'w') as outfile:
+            outfile.write("Host ID\tHostname\tUsername\tLast Seen\tFirst Seen\n")
+            for host_login in hosts_logins:
+                for key, value in host_login['logins'].items():
+                    outfile.write(host_login['host_id'] + '\t' + host_login['hostname'] + '\t' + key + '\t' +
+                                  value['last_seen'] + '\t' + value['first_seen'] + '\n')
+
+
 def list_files(action: str):
     if action == 'list_files':
         files = cs_methods.list_files()['resources']
@@ -272,7 +326,8 @@ def main():
         '                Req Arguments              Description\n'
         'configure       NIL                        provide CrowdStrike Client ID and/or Secret.\n'
         'req_token       NIL                        request for CrowdStrike authentication token.\n'
-        'get_info        -s or -f [--log]           get system info of provided host id or hostname.\n'
+        'get_info        -s or -f [--log]           get system info of provided host ids or hostnames.\n'
+        'get_logins      -s or -f [--log] [--clean] get recent logins of provided host ids.\n'
         'list_files      NIL                        list basic info of all RTR response files on CrowdStrike Cloud.\n'
         'get_file        -i                         get detailed info of a RTR response file on CrowdStrike Cloud.\n'
         'upload_file     -f and -d                  upload a RTR response file to CrowdStrike Cloud.\n'
@@ -305,6 +360,7 @@ def main():
     argument_parser.add_argument('--log', action='store_true', help="write raw server response to tsv file in current "
                                                                     "working directory")
     argument_parser.add_argument('--queue', action='store_true', help="queue commands to offline hosts")
+    argument_parser.add_argument('--clean', action='store_true', help="exclude less important details from output")
 
     options = argument_parser.parse_args()
     if options.file is not None:
@@ -321,6 +377,8 @@ def main():
     init(read_creds=True, read_token=True)
     if options.action == 'get_info':
         get_info(options.host, options.file, options.log)
+    elif options.action == 'get_logins':
+        get_logins(options.host, options.file, options.log, options.clean)
     elif options.action == 'start_rtr':
         start_rtr(options.host, options.file, options.log, options.queue)
     elif options.action in ('list_files', 'list_scripts'):
