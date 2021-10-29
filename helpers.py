@@ -9,7 +9,7 @@ read_only = ['cat', 'cd', 'clear', 'csrutil', 'env', 'eventlog', 'filehash', 'ge
 active_responder = ['cp', 'encrypt', 'get', 'kill', 'map', 'memdump', 'mkdir', 'mv', 'reg set' 'reg delete', 'reg load'
                     'reg unload', 'restart', 'rm', 'shutdown', 'tar', 'umount', 'unmap', 'update',
                     'xmemdump', 'zip']
-rtr_admin = ['put', 'run', 'runscript']
+rtr_admin = ['put', 'run', 'runscript', 'put-and-run']
 
 
 def to_readable(num, suffix='B'):
