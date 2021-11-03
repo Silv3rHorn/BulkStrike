@@ -127,7 +127,7 @@ def get_logins(host: str, file: str, log: bool, clean: bool):
     hosts_logins = list()
     if len(hosts_info) > 0:
         req_hosts = list(hosts_info.keys())
-        resources = cs_methods.get_host_logins(req_hosts).get('resources', {})
+        resources = cs_methods.get_host_logins(req_hosts)
 
         for resource in resources:
             recent_logins = resource['recent_logins']
@@ -140,6 +140,7 @@ def get_logins(host: str, file: str, log: bool, clean: bool):
                               or 'NETWORK SERVICE' in username):
                     continue
                 if username in agg_logins:
+                    agg_logins[username]['count'] += 1
                     if recent_login['login_time'] > agg_logins[username]['last_seen']:
                         agg_logins[username]['last_seen'] = recent_login['login_time']
                     elif recent_login['login_time'] < agg_logins[username]['last_seen']:
@@ -148,6 +149,7 @@ def get_logins(host: str, file: str, log: bool, clean: bool):
                     agg_logins[username] = dict()
                     agg_logins[username]['first_seen'] = recent_login['login_time']
                     agg_logins[username]['last_seen'] = recent_login['login_time']
+                    agg_logins[username]['count'] = 1
             hosts_logins.append({"host_id": resource['device_id'], "hostname": hosts_info[resource['device_id']],
                                  "logins": agg_logins})
 
@@ -156,11 +158,11 @@ def get_logins(host: str, file: str, log: bool, clean: bool):
         timestamp = datetime.now().strftime("%Y-%m-%d@%H%M%S")
         filename = "hosts_logins_" + timestamp + ".tsv"
         with open(filename, 'w') as outfile:
-            outfile.write("Host ID\tHostname\tUsername\tLast Seen\tFirst Seen\n")
+            outfile.write("Host ID\tHostname\tUsername\tLast Seen\tFirst Seen\tCount\n")
             for host_login in hosts_logins:
                 for key, value in host_login['logins'].items():
                     outfile.write(host_login['host_id'] + '\t' + host_login['hostname'] + '\t' + key + '\t' +
-                                  value['last_seen'] + '\t' + value['first_seen'] + '\n')
+                                  value['last_seen'] + '\t' + value['first_seen'] + '\t' + str(value['count']) + '\n')
 
 
 def list_files(action: str):

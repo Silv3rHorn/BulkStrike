@@ -167,7 +167,7 @@ def get_host_info(host_ids: list) -> dict:
     return http_request('GET', uri_path, params, get_token_flag=False)
 
 
-def get_host_logins(host_ids: list) -> dict:
+def get_host_logins(host_ids: list) -> list:
     """
         Get recent logs of one or more hosts
         :param host_ids: List of host id(s) to get recent logs
@@ -175,8 +175,13 @@ def get_host_logins(host_ids: list) -> dict:
     """
     uri_path = '/devices/combined/devices/login-history/v1'
     body = dict()
-    body['ids'] = host_ids
-    return http_request('POST', uri_path, data=body)
+    responses = list()
+    chunks = [host_ids[x:x+13] for x in range(0, len(host_ids), 13)]  # split into chunks of 13 host ids
+    for chunk in chunks:
+        body['ids'] = chunk
+        responses += http_request('POST', uri_path, data=body).get('resources', {})
+
+    return responses
 
 
 def upload_file(path: str, description: str) -> tuple:

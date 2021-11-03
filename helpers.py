@@ -89,12 +89,13 @@ def print_host_info(hosts_info: list):
 
 
 def print_host_logins(host_logins: list):
-    headers = ['Host ID', 'Hostname', 'Username', 'Last Seen', 'First Seen']
+    headers = ['Host ID', 'Hostname', 'Username', 'Last Seen', 'First Seen', 'Count']
     data = list()
 
     for host_login in host_logins:
         for key, value in host_login['logins'].items():
-            data.append([host_login['host_id'], host_login['hostname'], key, value['last_seen'], value['first_seen']])
+            data.append([host_login['host_id'], host_login['hostname'], key, value['last_seen'], value['first_seen'],
+                         value['count']])
 
     print(tabulate(data, headers, tablefmt='pretty'))
 
