@@ -123,15 +123,16 @@ def get_token_request() -> str:
     """
     global TOKEN_REQ_TIME
 
+    headers = {
+        'Content-Type': 'application/x-www-form-urlencoded'
+    }
     body = {
         'client_id': CLIENT_ID,
         'client_secret': SECRET
     }
-    headers = {
-        'Authorization': HEADERS['Authorization']
-    }
-    token_res = http_request('POST', '/oauth2/token', data=body, headers=headers, safe=True,
-                             get_token_flag=False)
+
+    token_res = http_request('POST', '/oauth2/token', data=body, headers=headers, safe=True, get_token_flag=False)
+
     try:
         TOKEN_REQ_TIME = datetime.now()
         return token_res.get('access_token')
