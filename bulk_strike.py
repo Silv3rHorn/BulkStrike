@@ -400,9 +400,9 @@ def main():
     if options.action == 'get_info':
         get_info(options.host, options.file, options.log)
     elif options.action == 'get_logins':
-        get_logins(options.host, options.file, options.log, options.clean, options.cmd_exe)
+        get_logins(options.host, options.file, options.log, options.clean)
     elif options.action == 'start_rtr':
-        start_rtr(options.host, options.file, options.log, options.queue)
+        start_rtr(options.host, options.file, options.log, options.queue, options.cmd_exe)
     elif options.action in ('list_files', 'list_scripts'):
         list_files(options.action)
     elif options.action in ('get_file', 'get_script'):
