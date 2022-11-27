@@ -239,7 +239,7 @@ def upload_script(path: str, permission: str, description: str):
         print("Error! File path is invalid.")
 
 
-def start_rtr(host: str, file: str, log: bool, queue: bool):
+def start_rtr(host: str, file: str, log: bool, queue: bool, cmd_exe:str):
     host_ids = []
     if host is not None:
         host_ids = host.split(',')
@@ -258,7 +258,25 @@ def start_rtr(host: str, file: str, log: bool, queue: bool):
 
     if len(response['errors']) == 0:
         print("RTR session started...")
-        print("type 'bulk <file path>' to execute multiple commands")
+
+        # If -e arg exists from cmdline then send rtr cmd to all hosts.
+        if cmd_exe is not None:       
+            print("Executing RTR command on all hosts: " + cmd_exe + " ..." )
+
+            if log:
+                timestamp = datetime.now().strftime("%Y-%m-%d@%H%M%S")
+                filename = "rtr_response_" + timestamp + ".tsv"
+                with open(filename, 'w') as outfile:
+                    outfile.write("Host ID\tSession ID\tComplete\tOffline Queued\tQuery Duration\tStdout\tStderr\tErrors\n")
+                    helpers.execute_command(cmd_exe, outfile)
+            else:
+                helpers.execute_command(cmd_exe, None)
+
+            print("Completed execution of RTR command, " + cmd_exe + " ,on all hosts." )
+            #TODO: Add Error handling to notify if any errors sent back from hosts.
+
+        else:       # Prompt for RTR command to execute on all hosts
+            print("type 'bulk <file path>' to execute multiple commands")
 
         choice = 1
         if log:
@@ -338,7 +356,7 @@ def main():
         'get_script      -i                         get detailed info of a RTR response file on CrowdStrike Cloud.\n'
         'upload_script   -f and -p [-d]             upload a RTR response file to CrowdStrike Cloud.\n'
         'delete_script   -i                         delete a RTR response file from CrowdStrike Cloud.\n'
-        'start_rtr       -s or -f [--log] [--queue] initialise rtr session on specified hosts.\n'
+        'start_rtr       -s or -f [-e] [--log] [--queue] initialise rtr session on specified hosts.\n'
         'get_qsessions   NIL                        get session ids of RTR sessions that had commands queued.\n'
         'get_qsess_data  NIL [--log]                get metadata of RTR sessions that had commands queued.\n'
         'del_qsession    -q                         delete a currently queued RTR session.\n'
@@ -358,6 +376,8 @@ def main():
         'session id of currently queued RTR session'))
     argument_parser.add_argument('-s', '--host', default=None, help=(
         'host id or hostname'))
+    argument_parser.add_argument('-e', '--cmd_exe', default=None, help=(  # Add 'runscript' cmd execution
+        'runscript command to execute on all hosts.'))
 
     argument_parser.add_argument('--log', action='store_true', help="write raw server response to tsv file in current "
                                                                     "working directory")
@@ -382,7 +402,7 @@ def main():
     elif options.action == 'get_logins':
         get_logins(options.host, options.file, options.log, options.clean)
     elif options.action == 'start_rtr':
-        start_rtr(options.host, options.file, options.log, options.queue)
+        start_rtr(options.host, options.file, options.log, options.queue, options.cmd_exe)
     elif options.action in ('list_files', 'list_scripts'):
         list_files(options.action)
     elif options.action in ('get_file', 'get_script'):
